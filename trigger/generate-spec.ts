@@ -121,8 +121,10 @@ export const generateSpec = schemaTask({
 
     metadata.set("status", "uploading")
 
+    const timestamp = Date.now()
+
     const blob = await put(
-      `specs/${payload.projectId}/${Date.now()}.md`,
+      `specs/${payload.projectId}/${timestamp}.md`,
       spec,
       {
         access: "private",
@@ -132,10 +134,27 @@ export const generateSpec = schemaTask({
       }
     )
 
+    const snapshotBlob = await put(
+      `canvas-snapshots/${payload.projectId}/${timestamp}.json`,
+      JSON.stringify({ nodes: payload.nodes, edges: payload.edges }),
+      {
+        access: "private",
+        contentType: "application/json",
+        addRandomSuffix: false,
+        allowOverwrite: true,
+      }
+    )
+
+    const specCount = await prisma.projectSpec.count({
+      where: { projectId: payload.projectId },
+    })
+
     const record = await prisma.projectSpec.create({
       data: {
         projectId: payload.projectId,
         filePath: blob.url,
+        version: specCount + 1,
+        canvasSnapshotUrl: snapshotBlob.url,
       },
     })
 

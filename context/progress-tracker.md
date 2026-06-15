@@ -3,10 +3,10 @@
 Update this file whenever the current phase, active feature, or implementation state changes.
 
 ## Current Phase
-- Feature 28 (Spec Persistence & Download) — complete
+- Feature 30 (Spec/Canvas Version History) — complete
 
 ## Current Goal
-- Feature 29 (TBD)
+- Feature 31 (TBD)
 
 ## Completed
 
@@ -40,6 +40,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - Feature 27 (Spec Generation Flow): app/api/ai/spec/route.ts — POST accepts roomId/chatHistory/nodes/edges, authenticates via Clerk, resolves projectId from roomId using getAccessibleProject (no client-supplied projectId), triggers generate-spec task, creates TaskRun record, returns runId. app/api/ai/spec/token/route.ts — POST accepts runId, verifies TaskRun ownership, issues Trigger.dev public token scoped to that run with 1-hour expiry. trigger/generate-spec.ts — schemaTask (id "generate-spec") with Zod-validated payload (projectId/roomId/chatHistory/nodes/edges); uses Gemini gemini-2.0-flash via @ai-sdk/google generateText to produce a structured Markdown spec from canvas context and chat history; tracks status/specLength in run metadata; returns { spec } as plain Markdown string. `npm run build` passes clean.
 - Feature 29 (Spec UI Integration): GET /api/projects/[projectId]/specs lists specs for a project; GET /api/projects/[projectId]/specs/[specId] returns spec content as text/markdown for preview (not as attachment). ai-sidebar.tsx Specs tab: fetches spec list when sidebar opens, renders clickable compact list with filename/createdAt, download button per item; preview Dialog (base-ui) shows spec content rendered via react-markdown with dark-theme styling; download action creates a temporary anchor to the download endpoint and lets the browser handle the file. react-markdown ^10.1.0 installed. Build clean.
 - Feature 28 (Spec Persistence & Download): ProjectSpec Prisma model added (id, projectId, filePath, createdAt; relation to Project with cascade delete; index on projectId); migration applied and client regenerated. trigger/generate-spec.ts updated to upload generated Markdown to Vercel Blob (specs/{projectId}/{timestamp}.md, private access) and create a ProjectSpec record, returning specId alongside spec. app/api/projects/[projectId]/specs/[specId]/download/route.ts — GET authenticates user, verifies project access via userHasProjectAccess, verifies spec belongs to project, fetches file from Vercel Blob and streams it back as a Markdown attachment (Content-Disposition: attachment). Returns 401/403/404 on error cases. `npm run build` passes clean.
+- Feature 30 (Spec/Canvas Version History): types/canvas.ts exports CanvasSnapshot interface and shared NODE_SYNC_CONFIG/EDGE_SYNC_CONFIG (used by both trigger/design-agent.ts and the new restore route). prisma/models/project.prisma ProjectSpec gains version Int (unique per project) and canvasSnapshotUrl String?; migration 20260615190000_add_spec_versioning backfills version numbers by createdAt order and adds a unique index on (projectId, version). trigger/generate-spec.ts now also uploads a canvas-snapshots/{projectId}/{timestamp}.json blob with the current nodes/edges and computes the next sequential version via a count query. GET /api/projects/[projectId]/specs returns version and canRestore (derived from canvasSnapshotUrl presence) instead of raw blob paths. New POST /api/projects/[projectId]/specs/[specId]/restore/route.ts fetches the stored snapshot from Blob and uses getLiveblocks().mutateStorage() to clear and repopulate the live room's nodes/edges LiveMaps with LiveObject.from(..., NODE_SYNC_CONFIG/EDGE_SYNC_CONFIG). ai-sidebar.tsx Specs tab shows a "vN" badge per spec and, when canRestore is true, a RotateCcw restore button (confirm dialog, loading spinner, error banner on failure). `npm run build` passes clean.
 
 ## In Progress
 

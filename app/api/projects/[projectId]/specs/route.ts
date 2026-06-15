@@ -16,9 +16,17 @@ export async function GET(
 
   const specs = await prisma.projectSpec.findMany({
     where: { projectId },
-    orderBy: { createdAt: "desc" },
-    select: { id: true, filePath: true, createdAt: true },
+    orderBy: { version: "desc" },
+    select: { id: true, filePath: true, createdAt: true, version: true, canvasSnapshotUrl: true },
   })
 
-  return Response.json(specs)
+  return Response.json(
+    specs.map((spec) => ({
+      id: spec.id,
+      filePath: spec.filePath,
+      createdAt: spec.createdAt,
+      version: spec.version,
+      canRestore: Boolean(spec.canvasSnapshotUrl),
+    }))
+  )
 }

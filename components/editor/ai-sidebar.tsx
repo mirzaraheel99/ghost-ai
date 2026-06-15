@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react"
 import ReactMarkdown from "react-markdown"
-import { Bot, X, Send, FileText, Download, Loader2, MessageSquare } from "lucide-react"
+import { Bot, X, Send, FileText, Download, Loader2, MessageSquare, RotateCcw } from "lucide-react"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -46,6 +46,8 @@ interface SpecItem {
   id: string
   filePath: string
   createdAt: string
+  version: number
+  canRestore: boolean
 }
 
 function getFilename(filePath: string): string {
@@ -116,6 +118,8 @@ export function AiSidebar({ isOpen, onClose, roomId, projectId }: AiSidebarProps
   // Spec state
   const [specs, setSpecs] = useState<SpecItem[]>([])
   const [specsLoading, setSpecsLoading] = useState(false)
+  const [restoringId, setRestoringId] = useState<string | null>(null)
+  const [restoreError, setRestoreError] = useState<string | null>(null)
   const [selectedSpec, setSelectedSpec] = useState<SpecItem | null>(null)
   const [specContent, setSpecContent] = useState<string | null>(null)
   const [specContentLoading, setSpecContentLoading] = useState(false)
@@ -436,6 +440,33 @@ export function AiSidebar({ isOpen, onClose, roomId, projectId }: AiSidebarProps
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
+    },
+    [projectId]
+  )
+
+  const handleSpecRestore = useCallback(
+    async (spec: SpecItem) => {
+      if (
+        !window.confirm(
+          `Restore canvas to v${spec.version}? This will replace the current canvas for everyone in this project.`
+        )
+      ) {
+        return
+      }
+
+      setRestoringId(spec.id)
+      setRestoreError(null)
+
+      try {
+        const res = await fetch(`/api/projects/${projectId}/specs/${spec.id}/restore`, {
+          method: "POST",
+        })
+        if (!res.ok) throw new Error("Failed to restore canvas")
+      } catch {
+        setRestoreError("Failed to restore canvas. Please try again.")
+      } finally {
+        setRestoringId(null)
+      }
     },
     [projectId]
   )
@@ -799,6 +830,10 @@ export function AiSidebar({ isOpen, onClose, roomId, projectId }: AiSidebarProps
               )}
             </Button>
 
+            {restoreError && (
+              <p className="text-[10px] text-red-400">{restoreError}</p>
+            )}
+
             {specsLoading ? (
               <div className="flex flex-1 items-center justify-center">
                 <Loader2 className="h-5 w-5 animate-spin text-text-muted" />
@@ -822,12 +857,32 @@ export function AiSidebar({ isOpen, onClose, roomId, projectId }: AiSidebarProps
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-xs font-medium text-text-primary">
+                          <span className="mr-1.5 rounded bg-bg-subtle px-1 py-0.5 text-[10px] font-semibold text-text-muted">
+                            v{spec.version}
+                          </span>
                           {getFilename(spec.filePath)}
                         </p>
                         <p className="text-[10px] text-text-faint">
                           {formatSpecDate(spec.createdAt)}
                         </p>
                       </div>
+                      {spec.canRestore && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleSpecRestore(spec)
+                          }}
+                          disabled={restoringId === spec.id}
+                          title={`Restore canvas to v${spec.version}`}
+                          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-text-faint opacity-0 transition-opacity hover:bg-bg-subtle hover:text-text-primary group-hover:opacity-100 disabled:opacity-60"
+                        >
+                          {restoringId === spec.id ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <RotateCcw className="h-3 w-3" />
+                          )}
+                        </button>
+                      )}
                       <button
                         onClick={(e) => {
                           e.stopPropagation()

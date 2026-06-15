@@ -44,3 +44,29 @@ export interface CanvasEdgeData extends Record<string, unknown> {
 
 export type CanvasNode = Node<CanvasNodeData, "canvasNode">
 export type CanvasEdge = Edge<CanvasEdgeData, "canvasEdge">
+
+export interface CanvasSnapshot {
+  nodes: CanvasNode[]
+  edges: CanvasEdge[]
+}
+
+export const NODE_SYNC_CONFIG = {
+  selected: false,
+  dragging: false,
+  measured: false,
+  resizing: false,
+  position: "atomic" as const,
+  sourcePosition: "atomic" as const,
+  targetPosition: "atomic" as const,
+  extent: "atomic" as const,
+  origin: "atomic" as const,
+  handles: "atomic" as const,
+}
+
+export const EDGE_SYNC_CONFIG = {
+  selected: false,
+  markerStart: "atomic" as const,
+  markerEnd: "atomic" as const,
+  label: "atomic" as const,
+  labelBgPadding: "atomic" as const,
+}

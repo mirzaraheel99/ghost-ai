@@ -5,32 +5,11 @@ import { z } from "zod";
 import { LiveObject } from "@liveblocks/client";
 import type { LiveblocksNode, LiveblocksEdge } from "@liveblocks/react-flow";
 import { getLiveblocks } from "@/lib/liveblocks";
-import { NODE_COLORS, SHAPE_DEFAULTS, NODE_SHAPES } from "@/types/canvas";
+import { NODE_COLORS, SHAPE_DEFAULTS, NODE_SHAPES, NODE_SYNC_CONFIG, EDGE_SYNC_CONFIG } from "@/types/canvas";
 import type { CanvasNode, CanvasEdge, NodeShape } from "@/types/canvas";
 
 const AI_USER_ID = "ghost-ai";
 const AI_USER_INFO = { name: "Ghost AI", avatar: "", color: "#6457f9" };
-
-const NODE_SYNC_CONFIG = {
-  selected: false,
-  dragging: false,
-  measured: false,
-  resizing: false,
-  position: "atomic" as const,
-  sourcePosition: "atomic" as const,
-  targetPosition: "atomic" as const,
-  extent: "atomic" as const,
-  origin: "atomic" as const,
-  handles: "atomic" as const,
-};
-
-const EDGE_SYNC_CONFIG = {
-  selected: false,
-  markerStart: "atomic" as const,
-  markerEnd: "atomic" as const,
-  label: "atomic" as const,
-  labelBgPadding: "atomic" as const,
-};
 
 const COLOR_NAMES = ["neutral", "blue", "purple", "orange", "red", "pink", "green", "teal"];
 
